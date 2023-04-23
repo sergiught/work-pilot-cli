@@ -6,31 +6,18 @@ import (
 	"github.com/sergiught/work-pilot-cli/internal/command/work"
 )
 
-type Command struct {
-	cmd *cobra.Command
-}
-
-func New() *Command {
+func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "wp",
-		Short:   "",
-		Long:    "",
-		Example: "",
-		Version: "dev",
-		// SilenceErrors: true,
-		// SilenceUsage:  true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
-		},
+		Use:           "wp",
+		Short:         "",
+		Long:          "",
+		Example:       "",
+		Version:       "dev",
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 
-	cmd.AddCommand(work.New().Command())
+	cmd.AddCommand(work.NewCommand())
 
-	return &Command{
-		cmd: cmd,
-	}
-}
-
-func (c *Command) Command() *cobra.Command {
-	return c.cmd
+	return cmd
 }
