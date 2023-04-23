@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 func NewCommand() *cobra.Command {
@@ -16,7 +15,7 @@ func NewCommand() *cobra.Command {
 		Long:    "",
 		Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			program := tea.NewProgram(NewWork())
+			program := tea.NewProgram(NewWorkModel())
 			work, err := program.Run()
 			if err != nil {
 				return err
@@ -27,8 +26,6 @@ func NewCommand() *cobra.Command {
 				return fmt.Errorf("failed to cast model to a work.Model, type is %T", model)
 			}
 
-			log.Info("Sleeping...", "seconds", model.Choice)
-			time.Sleep(time.Millisecond * time.Duration(model.Choice))
 			log.Info("Work done!")
 
 			return nil
