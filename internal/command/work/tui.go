@@ -42,6 +42,7 @@ type Model struct {
 	inputIsSelected bool
 	choice          int
 	timeRemaining   int
+	task            string
 }
 
 func NewWorkModel() *Model {

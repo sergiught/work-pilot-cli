@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func NewCommand() *cobra.Command {
+func NewCommand(repository *Repository) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "work",
 		Aliases: []string{"wk"},
@@ -15,8 +15,12 @@ func NewCommand() *cobra.Command {
 		Long:    "",
 		Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			model := NewWorkModel()
+			task, err := cmd.Flags().GetString("task")
+			if err != nil {
+				return err
+			}
 
+			model := NewWorkModel()
 			if len(args) > 0 {
 				choice, err := strconv.Atoi(args[0])
 				if err != nil {
@@ -27,12 +31,33 @@ func NewCommand() *cobra.Command {
 				model.timeRemaining = choice
 			}
 
-			program := tea.NewProgram(model)
-			_, err := program.Run()
+			model.task = task
 
-			return err
+			program := tea.NewProgram(model)
+			_, err = program.Run()
+			if err != nil {
+				return err
+			}
+
+			work := Work{
+				Task:     model.task,
+				Duration: model.choice,
+			}
+
+			if model.task == "" {
+				work.Task = "generic"
+			}
+
+			repository.Database.Create(&work)
+			if repository.Database.Error != nil {
+				return repository.Database.Error
+			}
+
+			return nil
 		},
 	}
+
+	cmd.Flags().String("task", "", "The name of the task you want to work on")
 
 	return cmd
 }
