@@ -9,7 +9,6 @@ import (
 func NewCommand(repository *Repository) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "work",
-		Aliases: []string{"wk"},
 		Args:    cobra.MaximumNArgs(1),
 		Short:   "",
 		Long:    "",
@@ -45,7 +44,7 @@ func NewCommand(repository *Repository) *cobra.Command {
 			}
 
 			if model.task == "" {
-				work.Task = "generic"
+				work.Task = "default"
 			}
 
 			repository.Database.Create(&work)

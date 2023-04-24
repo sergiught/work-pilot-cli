@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"github.com/sergiught/work-pilot-cli/internal/command/logbook"
 	"github.com/sergiught/work-pilot-cli/internal/command/work"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
@@ -35,7 +36,11 @@ func NewCommand() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(work.NewCommand(workRepository))
+	cobra.EnableCommandSorting = false
+	cmd.AddCommand(
+		work.NewCommand(workRepository),
+		logbook.NewCommand(workRepository),
+	)
 
 	return cmd
 }
