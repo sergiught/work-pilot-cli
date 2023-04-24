@@ -2,7 +2,6 @@ package work
 
 import (
 	"fmt"
-	"github.com/charmbracelet/bubbles/textinput"
 	"io"
 	"strconv"
 	"strings"
@@ -10,8 +9,11 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
+	"github.com/gen2brain/beeep"
 )
 
 const (
@@ -151,6 +153,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tickMsg:
 		if m.progress.Percent() == 1.0 {
+			err := beeep.Beep(44000, 10000)
+			if err != nil {
+				log.Error("failed to notify with a beep that work finished", err)
+			}
+
+			err = beeep.Notify(
+				"Work Pilot: Work Finished!",
+				fmt.Sprintf("Congratulations! You've worked for %d second(s).", m.choice),
+				"",
+			)
+			if err != nil {
+				log.Error("failed to notify with a notification that work finished", err)
+			}
+
 			return m, tea.Quit
 		}
 
