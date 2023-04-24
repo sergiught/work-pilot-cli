@@ -27,7 +27,7 @@ var (
 	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1).ColorWhitespace(true)
-	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	infoTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
 	progressHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#626262")).Render
 )
 
@@ -39,6 +39,7 @@ type Model struct {
 	isQuitting      bool
 	inputIsSelected bool
 	choice          int
+	timeRemaining   int
 }
 
 func NewWorkModel() Model {
@@ -115,6 +116,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Quit
 				}
 				m.choice = value
+				m.timeRemaining = value
 				return m, tickCmd()
 			}
 
@@ -136,6 +138,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				m.choice = i.value
+				m.timeRemaining = i.value
 
 				return m, tickCmd()
 			}
@@ -146,6 +149,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.progress.Percent() == 1.0 {
 			return m, tea.Quit
 		}
+
+		m.timeRemaining--
 
 		increment := 1.0 / float64(m.choice)
 		cmd := m.progress.IncrPercent(increment)
@@ -172,13 +177,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if m.isQuitting {
-		return quitTextStyle.Render("Not working? That’s cool. Enjoy a break!")
+		return infoTextStyle.Render("Not working? That’s cool. Enjoy a break!")
 	}
 
 	if m.inputIsSelected && m.choice == 0 {
-		return "\n" +
+		return "\n    " +
 			fmt.Sprintf(
-				"How many minutes do you want to work for??\n\n%s\n\n%s",
+				"How many minutes do you want to work for?\n\n    %s\n\n    %s",
 				m.input.View(),
 				"(q to quit)",
 			) +
@@ -187,11 +192,17 @@ func (m Model) View() string {
 
 	if m.choice != 0 {
 		pad := strings.Repeat(" ", progressPadding)
-		return quitTextStyle.Render(fmt.Sprintf("Running timer for %d seconds. Have fun!", m.choice)) +
+		return infoTextStyle.Render(
+			fmt.Sprintf(
+				"Running timer for %d seconds. Have fun! %d seconds remaining.",
+				m.choice,
+				m.timeRemaining,
+			),
+		) +
 			"\n" +
 			pad + m.progress.View() +
 			"\n\n" +
-			pad + progressHelpStyle("Press any key to quit")
+			pad + progressHelpStyle("Press q key to quit")
 	}
 
 	return "\n" + m.list.View()
@@ -223,7 +234,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 		return
 	}
 
-	str := fmt.Sprintf("%d. %s", index+1, i.label)
+	str := fmt.Sprintf("• %s", i.label)
 
 	fn := itemStyle.Render
 	if index == m.Index() {

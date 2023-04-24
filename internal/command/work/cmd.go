@@ -3,7 +3,6 @@ package work
 import (
 	"fmt"
 	"github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
 
@@ -25,8 +24,6 @@ func NewCommand() *cobra.Command {
 			if !ok {
 				return fmt.Errorf("failed to cast model to a work.Model, type is %T", model)
 			}
-
-			log.Info("Work done!")
 
 			return nil
 		},
