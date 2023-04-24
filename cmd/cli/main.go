@@ -10,11 +10,6 @@ import (
 	"github.com/sergiught/work-pilot-cli/internal/command/base"
 )
 
-// wp work <amount-of-time-in-minutes>
-// If no argument, start infinite tracker with no timeout
-// wp work <time> --name "project A" // track time for project A
-// wp schedule  // connect to gmail and add to schedule
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sergiught/work-pilot-cli/internal/work"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -34,6 +36,8 @@ var (
 )
 
 type Model struct {
+	repository *work.Repository
+
 	list     list.Model
 	input    textinput.Model
 	progress progress.Model
@@ -45,7 +49,7 @@ type Model struct {
 	task            string
 }
 
-func NewWorkModel() *Model {
+func NewWorkModel(repository *work.Repository) *Model {
 	items := []list.Item{
 		listItem{
 			label: "20 seconds",
@@ -81,9 +85,10 @@ func NewWorkModel() *Model {
 	p := progress.New(progress.WithDefaultGradient())
 
 	return &Model{
-		list:     l,
-		input:    ti,
-		progress: p,
+		repository: repository,
+		list:       l,
+		input:      ti,
+		progress:   p,
 	}
 }
 
@@ -166,6 +171,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			)
 			if err != nil {
 				log.Error("failed to notify with a notification that work finished", err)
+			}
+
+			task := work.Task{
+				Name:     m.task,
+				Duration: m.choice,
+			}
+			err = m.repository.CreateWorkTask(task)
+			if err != nil {
+				log.Error("failed to save work task in the database", err)
 			}
 
 			return m, tea.Quit

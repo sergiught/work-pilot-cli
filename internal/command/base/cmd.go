@@ -2,11 +2,13 @@ package base
 
 import (
 	"fmt"
-	"github.com/sergiught/work-pilot-cli/internal/command/logbook"
-	"github.com/sergiught/work-pilot-cli/internal/command/work"
+
 	"github.com/spf13/cobra"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+
+	logbookCommand "github.com/sergiught/work-pilot-cli/internal/command/logbook"
+	workCommand "github.com/sergiught/work-pilot-cli/internal/command/work"
+	"github.com/sergiught/work-pilot-cli/internal/platform/database"
+	"github.com/sergiught/work-pilot-cli/internal/work"
 )
 
 func NewCommand() *cobra.Command {
@@ -21,16 +23,12 @@ func NewCommand() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			database, err := gorm.Open(sqlite.Open("work-pilot.db"), &gorm.Config{})
+			db, err := database.Connect()
 			if err != nil {
-				return fmt.Errorf("failed to open database: %w", err)
-			}
-			err = database.AutoMigrate(&work.Work{})
-			if err != nil {
-				return fmt.Errorf("failed to migrate database: %w", err)
+				return fmt.Errorf("failed to connect to the database: %w", err)
 			}
 
-			workRepository.Database = database
+			workRepository.Database = db
 
 			return nil
 		},
@@ -38,8 +36,8 @@ func NewCommand() *cobra.Command {
 
 	cobra.EnableCommandSorting = false
 	cmd.AddCommand(
-		work.NewCommand(workRepository),
-		logbook.NewCommand(workRepository),
+		workCommand.NewCommand(workRepository),
+		logbookCommand.NewCommand(workRepository),
 	)
 
 	return cmd

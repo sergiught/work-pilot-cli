@@ -1,12 +1,15 @@
 package logbook
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sergiught/work-pilot-cli/internal/command/work"
-	"strconv"
-	"time"
+	"github.com/charmbracelet/log"
+
+	"github.com/sergiught/work-pilot-cli/internal/work"
 )
 
 var baseStyle = lipgloss.NewStyle().
@@ -14,27 +17,35 @@ var baseStyle = lipgloss.NewStyle().
 	BorderForeground(lipgloss.Color("240"))
 
 type Model struct {
+	repository *work.Repository
+
 	table table.Model
 }
 
-func NewModel(workItems []work.Work) *Model {
+func NewModel(repository *work.Repository) *Model {
+	workTasks, err := repository.GetAllWorkTasks()
+	if err != nil {
+		log.Error("failed to get all work tasks from the database", err)
+		return nil
+	}
+
+	var rows []table.Row
+	for _, task := range workTasks {
+		rows = append(rows, table.Row{
+			task.Name,
+			strconv.Itoa(task.Duration),
+			task.CreatedAt.Format("2006-01-02"),
+			task.CreatedAt.Format("15:04:05"),
+			task.CreatedAt.Add(time.Duration(task.Duration) * time.Second).Format("15:04:05"),
+		})
+	}
+
 	columns := []table.Column{
 		{Title: "Work Task", Width: 30},
 		{Title: "Duration", Width: 10},
 		{Title: "Date", Width: 11},
 		{Title: "Started at", Width: 11},
 		{Title: "Finished at", Width: 11},
-	}
-
-	var rows []table.Row
-	for _, item := range workItems {
-		rows = append(rows, table.Row{
-			item.Task,
-			strconv.Itoa(item.Duration),
-			item.CreatedAt.Format("2006-01-02"),
-			item.CreatedAt.Format("15:04:05"),
-			item.CreatedAt.Add(time.Duration(item.Duration) * time.Second).Format("15:04:05"),
-		})
 	}
 
 	t := table.New(
@@ -54,7 +65,8 @@ func NewModel(workItems []work.Work) *Model {
 	t.SetStyles(s)
 
 	return &Model{
-		table: t,
+		repository: repository,
+		table:      t,
 	}
 }
 

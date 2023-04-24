@@ -2,8 +2,9 @@ package logbook
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/sergiught/work-pilot-cli/internal/command/work"
 	"github.com/spf13/cobra"
+
+	"github.com/sergiught/work-pilot-cli/internal/work"
 )
 
 func NewCommand(repository *work.Repository) *cobra.Command {
@@ -15,25 +16,14 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 		Long:    "",
 		Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var workItems []work.Work
+			model := NewModel(repository)
 
-			repository.Database.Find(&workItems)
-			if repository.Database.Error != nil {
-				return repository.Database.Error
-			}
-
-			model := NewModel(workItems)
 			program := tea.NewProgram(model)
 			_, err := program.Run()
-			if err != nil {
-				return err
-			}
 
 			return err
 		},
 	}
-
-	cmd.Flags().String("task", "", "The name of the task you want to work on")
 
 	return cmd
 }
