@@ -42,7 +42,7 @@ type Model struct {
 	timeRemaining   int
 }
 
-func NewWorkModel() Model {
+func NewWorkModel() *Model {
 	items := []list.Item{
 		listItem{
 			label: "20 seconds",
@@ -77,7 +77,7 @@ func NewWorkModel() Model {
 
 	p := progress.New(progress.WithDefaultGradient())
 
-	return Model{
+	return &Model{
 		list:     l,
 		input:    ti,
 		progress: p,
@@ -85,7 +85,11 @@ func NewWorkModel() Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return textinput.Blink
+	if m.choice != 0 {
+		return tickCmd()
+	}
+
+	return nil
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
