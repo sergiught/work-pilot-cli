@@ -2,7 +2,9 @@ package work
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/textinput"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,11 +32,13 @@ var (
 )
 
 type Model struct {
-	list       list.Model
-	progress   progress.Model
-	isQuitting bool
+	list     list.Model
+	input    textinput.Model
+	progress progress.Model
 
-	Choice int
+	isQuitting      bool
+	inputIsSelected bool
+	choice          int
 }
 
 func NewWorkModel() Model {
@@ -51,6 +55,9 @@ func NewWorkModel() Model {
 			label: "60 seconds",
 			value: 60,
 		},
+		listItem{
+			label: "Custom Value",
+		},
 	}
 
 	l := list.New(items, itemDelegate{}, listWidth, listHeight)
@@ -61,27 +68,23 @@ func NewWorkModel() Model {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
+	ti := textinput.New()
+	ti.Placeholder = "0"
+	ti.Focus()
+	ti.CharLimit = 32
+	ti.Width = 20
+
 	p := progress.New(progress.WithDefaultGradient())
 
 	return Model{
 		list:     l,
+		input:    ti,
 		progress: p,
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
-}
-
-func (m Model) View() string {
-	if m.Choice != 0 {
-		pad := strings.Repeat(" ", progressPadding)
-		return quitTextStyle.Render(fmt.Sprintf("Running timer for %d seconds. Have fun!", m.Choice)) + "\n" + pad + m.progress.View() + "\n\n" + pad + progressHelpStyle("Press any key to quit")
-	}
-	if m.isQuitting {
-		return quitTextStyle.Render("Not working? That’s cool. Enjoy a break!")
-	}
-	return "\n" + m.list.View()
+	return textinput.Blink
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -99,13 +102,44 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c", "q":
 			m.isQuitting = true
+
 			return m, tea.Quit
 		case "enter":
-			i, ok := m.list.SelectedItem().(listItem)
-			if ok {
-				m.Choice = i.value
+			if m.choice != 0 {
 				return m, tickCmd()
 			}
+
+			if m.inputIsSelected {
+				value, err := strconv.Atoi(m.input.Value())
+				if err != nil {
+					return m, tea.Quit
+				}
+				m.choice = value
+				return m, tickCmd()
+			}
+
+			i, ok := m.list.SelectedItem().(listItem)
+			if ok {
+				if i.label == "Custom Value" {
+					m.inputIsSelected = true
+
+					var commands []tea.Cmd
+
+					var cmd tea.Cmd
+					m.list, cmd = m.list.Update(msg)
+					commands = append(commands, cmd)
+
+					m.input, cmd = m.input.Update(msg)
+					commands = append(commands, cmd)
+
+					return m, tea.Batch(commands...)
+				}
+
+				m.choice = i.value
+
+				return m, tickCmd()
+			}
+
 			return m, tea.Quit
 		}
 	case tickMsg:
@@ -113,20 +147,54 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		increment := 1.0 / float64(m.Choice)
+		increment := 1.0 / float64(m.choice)
 		cmd := m.progress.IncrPercent(increment)
+
 		return m, tea.Batch(tickCmd(), cmd)
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
+
 		return m, cmd
-	default:
-		return m, nil
 	}
+
+	var commands []tea.Cmd
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
-	return m, cmd
+	commands = append(commands, cmd)
+
+	m.input, cmd = m.input.Update(msg)
+	commands = append(commands, cmd)
+
+	return m, tea.Batch(commands...)
+}
+
+func (m Model) View() string {
+	if m.isQuitting {
+		return quitTextStyle.Render("Not working? That’s cool. Enjoy a break!")
+	}
+
+	if m.inputIsSelected && m.choice == 0 {
+		return "\n" +
+			fmt.Sprintf(
+				"How many minutes do you want to work for??\n\n%s\n\n%s",
+				m.input.View(),
+				"(q to quit)",
+			) +
+			"\n"
+	}
+
+	if m.choice != 0 {
+		pad := strings.Repeat(" ", progressPadding)
+		return quitTextStyle.Render(fmt.Sprintf("Running timer for %d seconds. Have fun!", m.choice)) +
+			"\n" +
+			pad + m.progress.View() +
+			"\n\n" +
+			pad + progressHelpStyle("Press any key to quit")
+	}
+
+	return "\n" + m.list.View()
 }
 
 type tickMsg time.Time
