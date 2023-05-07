@@ -38,18 +38,29 @@ var (
 type Model struct {
 	repository *work.Repository
 
-	list     list.Model
-	input    textinput.Model
-	progress progress.Model
+	taskInput textinput.Model
+	timeList  list.Model
+	timeInput textinput.Model
+	progress  progress.Model
 
-	isQuitting      bool
-	inputIsSelected bool
-	choice          int
-	timeRemaining   int
-	task            string
+	isQuitting         bool
+	taskSelected       bool
+	listTimeSelected   bool
+	customTimeSelected bool
+
+	choice        int
+	timeRemaining int
+	task          string
 }
 
 func NewWorkModel(repository *work.Repository) *Model {
+	customTaskInput := textinput.New()
+	customTaskInput.SetValue("Work")
+	customTaskInput.Placeholder = "Work"
+	customTaskInput.Focus()
+	customTaskInput.CharLimit = 256
+	customTaskInput.Width = 256
+
 	items := []list.Item{
 		listItem{
 			label: "20 seconds",
@@ -68,27 +79,28 @@ func NewWorkModel(repository *work.Repository) *Model {
 		},
 	}
 
-	l := list.New(items, itemDelegate{}, listWidth, listHeight)
-	l.Title = "How many minutes do you want to work for?"
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(false)
-	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
+	timeList := list.New(items, itemDelegate{}, listWidth, listHeight)
+	timeList.Title = "How many minutes do you want to work for?"
+	timeList.SetShowStatusBar(false)
+	timeList.SetFilteringEnabled(false)
+	timeList.Styles.Title = titleStyle
+	timeList.Styles.PaginationStyle = paginationStyle
+	timeList.Styles.HelpStyle = helpStyle
 
-	ti := textinput.New()
-	ti.Placeholder = "0"
-	ti.Focus()
-	ti.CharLimit = 32
-	ti.Width = 20
+	customTimeInput := textinput.New()
+	customTimeInput.Placeholder = "0"
+	customTimeInput.Focus()
+	customTimeInput.CharLimit = 32
+	customTimeInput.Width = 20
 
-	p := progress.New(progress.WithDefaultGradient())
+	progressIndicator := progress.New(progress.WithDefaultGradient())
 
 	return &Model{
 		repository: repository,
-		list:       l,
-		input:      ti,
-		progress:   p,
+		taskInput:  customTaskInput,
+		timeList:   timeList,
+		timeInput:  customTimeInput,
+		progress:   progressIndicator,
 	}
 }
 
@@ -103,7 +115,7 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.list.SetWidth(msg.Width)
+		m.timeList.SetWidth(msg.Width)
 
 		m.progress.Width = msg.Width - progressPadding*2 - 4
 		if m.progress.Width > progressMaxWidth {
@@ -118,58 +130,68 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, tea.Quit
 		case "enter":
-			if m.choice != 0 {
+			if m.taskSelected && (m.listTimeSelected || m.customTimeSelected) && m.choice != 0 {
 				return m, tickCmd()
 			}
 
-			if m.inputIsSelected {
-				value, err := strconv.Atoi(m.input.Value())
+			if m.taskSelected && m.listTimeSelected && m.customTimeSelected && m.choice == 0 {
+				value, err := strconv.Atoi(m.timeInput.Value())
 				if err != nil {
+					log.Error("failed to convert value to int", "value", value, "err", err)
 					return m, tea.Quit
 				}
+
 				m.choice = value
 				m.timeRemaining = value
+
 				return m, tickCmd()
 			}
 
-			i, ok := m.list.SelectedItem().(listItem)
-			if ok {
-				if i.label == "Custom Value" {
-					m.inputIsSelected = true
+			if m.taskSelected && !m.listTimeSelected {
+				if selectedItem, ok := m.timeList.SelectedItem().(listItem); ok {
+					m.listTimeSelected = true
 
-					var commands []tea.Cmd
+					if selectedItem.label == "Custom Value" {
+						m.customTimeSelected = true
 
-					var cmd tea.Cmd
-					m.list, cmd = m.list.Update(msg)
-					commands = append(commands, cmd)
+						m.timeInput.Reset()
 
-					m.input, cmd = m.input.Update(msg)
-					commands = append(commands, cmd)
+						var cmd tea.Cmd
+						m.timeInput, cmd = m.timeInput.Update(msg)
+						return m, cmd
+					}
 
-					return m, tea.Batch(commands...)
+					m.choice = selectedItem.value
+					m.timeRemaining = selectedItem.value
+
+					return m, tickCmd()
 				}
-
-				m.choice = i.value
-				m.timeRemaining = i.value
-
-				return m, tickCmd()
 			}
 
-			return m, tea.Quit
+			if m.taskInput.Value() != "" && (!m.listTimeSelected || !m.customTimeSelected) {
+				m.taskSelected = true
+				m.task = m.taskInput.Value()
+
+				var cmd tea.Cmd
+				m.timeList, cmd = m.timeList.Update(msg)
+				return m, cmd
+			}
+
+			var cmd tea.Cmd
+			m.timeList, cmd = m.timeList.Update(msg)
+			return m, cmd
 		}
 	case tickMsg:
 		if m.progress.Percent() == 1.0 {
-			err := beeep.Beep(44000, 10000)
-			if err != nil {
+			if err := beeep.Beep(44000, 10000); err != nil {
 				log.Error("failed to notify with a beep that work finished", err)
 			}
 
-			err = beeep.Notify(
+			if err := beeep.Notify(
 				"Work Pilot: Work Finished!",
 				fmt.Sprintf("Congratulations! You've worked for %d second(s).", m.choice),
 				"",
-			)
-			if err != nil {
+			); err != nil {
 				log.Error("failed to notify with a notification that work finished", err)
 			}
 
@@ -177,8 +199,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Name:     m.task,
 				Duration: m.choice,
 			}
-			err = m.repository.CreateWorkTask(task)
-			if err != nil {
+
+			if err := m.repository.CreateWorkTask(task); err != nil {
 				log.Error("failed to save work task in the database", err)
 			}
 
@@ -201,10 +223,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var commands []tea.Cmd
 
 	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
+	m.taskInput, cmd = m.taskInput.Update(msg)
 	commands = append(commands, cmd)
 
-	m.input, cmd = m.input.Update(msg)
+	m.timeList, cmd = m.timeList.Update(msg)
+	commands = append(commands, cmd)
+
+	m.timeInput, cmd = m.timeInput.Update(msg)
 	commands = append(commands, cmd)
 
 	return m, tea.Batch(commands...)
@@ -213,16 +238,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	if m.isQuitting {
 		return infoTextStyle.Render("Not working? That’s cool. Enjoy a break!")
-	}
-
-	if m.inputIsSelected && m.choice == 0 {
-		return "\n    " +
-			fmt.Sprintf(
-				"How many minutes do you want to work for?\n\n    %s\n\n    %s",
-				m.input.View(),
-				"(q to quit)",
-			) +
-			"\n"
 	}
 
 	if m.choice != 0 {
@@ -240,7 +255,31 @@ func (m Model) View() string {
 			pad + progressHelpStyle("Press q key to quit")
 	}
 
-	return "\n" + m.list.View()
+	if !m.taskSelected {
+		return "\n    " +
+			fmt.Sprintf(
+				"What task do you want to work on?\n\n    %s\n\n    %s",
+				m.taskInput.View(),
+				"(q to quit)",
+			) +
+			"\n"
+	}
+
+	if m.taskSelected && m.listTimeSelected && m.customTimeSelected {
+		return "\n    " +
+			fmt.Sprintf(
+				"How many minutes do you want to work for?\n\n    %s\n\n    %s",
+				m.timeInput.View(),
+				"(q to quit)",
+			) +
+			"\n"
+	}
+
+	if m.taskSelected && (!m.listTimeSelected || !m.customTimeSelected) {
+		return "\n" + m.timeList.View()
+	}
+
+	return ""
 }
 
 type tickMsg time.Time
