@@ -30,29 +30,68 @@ func NewModel(repository *work.Repository) *Model {
 	}
 
 	var rows []table.Row
+	var workTaskColumnLength, durationColumnLength, dateColumnLength, startedAtColumnLength, finishedAtColumnLength int
 	for _, task := range workTasks {
+		taskName := task.Name
+		duration := strconv.Itoa(task.Duration)
+		date := task.CreatedAt.Format("2006-01-02")
+		startedAt := task.CreatedAt.Format("15:04:05")
+		finishedAt := task.CreatedAt.Add(time.Duration(task.Duration) * time.Second).Format("15:04:05")
+
+		if workTaskColumnLength < len(task.Name) {
+			workTaskColumnLength = len(task.Name)
+		}
+		if durationColumnLength < len(strconv.Itoa(task.Duration)) {
+			durationColumnLength = len(strconv.Itoa(task.Duration))
+		}
+		if dateColumnLength < len(task.CreatedAt.Format("2006-01-02")) {
+			dateColumnLength = len(task.CreatedAt.Format("2006-01-02"))
+		}
+		if startedAtColumnLength < len(task.CreatedAt.Format("15:04:05")) {
+			startedAtColumnLength = len(task.CreatedAt.Format("15:04:05"))
+		}
+		if finishedAtColumnLength < len(task.CreatedAt.Add(time.Duration(task.Duration)*time.Second).Format("15:04:05")) {
+			finishedAtColumnLength = len(task.CreatedAt.Add(time.Duration(task.Duration) * time.Second).Format("15:04:05"))
+		}
+
 		rows = append(rows, table.Row{
-			task.Name,
-			strconv.Itoa(task.Duration),
-			task.CreatedAt.Format("2006-01-02"),
-			task.CreatedAt.Format("15:04:05"),
-			task.CreatedAt.Add(time.Duration(task.Duration) * time.Second).Format("15:04:05"),
+			taskName,
+			duration,
+			date,
+			startedAt,
+			finishedAt,
 		})
 	}
 
+	if workTaskColumnLength < len("Work Task") {
+		workTaskColumnLength = len("Work Task")
+	}
+	if durationColumnLength < len("Duration") {
+		durationColumnLength = len("Duration")
+	}
+	if dateColumnLength < len("Date") {
+		dateColumnLength = len("Date")
+	}
+	if startedAtColumnLength < len("Started at") {
+		startedAtColumnLength = len("Started at")
+	}
+	if finishedAtColumnLength < len("Finished at") {
+		finishedAtColumnLength = len("Finished at")
+	}
+
 	columns := []table.Column{
-		{Title: "Work Task", Width: 30},
-		{Title: "Duration", Width: 10},
-		{Title: "Date", Width: 11},
-		{Title: "Started at", Width: 11},
-		{Title: "Finished at", Width: 11},
+		{Title: "Work Task", Width: workTaskColumnLength},
+		{Title: "Duration", Width: durationColumnLength},
+		{Title: "Date", Width: dateColumnLength},
+		{Title: "Started at", Width: startedAtColumnLength},
+		{Title: "Finished at", Width: finishedAtColumnLength},
 	}
 
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(false),
-		table.WithHeight(7),
+		table.WithHeight(len(rows)),
 	)
 
 	s := table.DefaultStyles()
