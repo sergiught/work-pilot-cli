@@ -17,7 +17,7 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 		Long:    "",
 		Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			model := NewWorkModel(repository)
+			model := NewModel(repository)
 
 			task, err := cmd.Flags().GetString("task")
 			if err != nil {
