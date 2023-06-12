@@ -11,6 +11,7 @@ import (
 	"github.com/sergiught/work-pilot-cli/internal/work"
 )
 
+// NewCommand initializes the base command.
 func NewCommand() *cobra.Command {
 	workRepository := &work.Repository{}
 

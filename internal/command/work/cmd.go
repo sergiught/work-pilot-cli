@@ -3,12 +3,13 @@ package work
 import (
 	"strconv"
 
-	"github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
 	"github.com/sergiught/work-pilot-cli/internal/work"
 )
 
+// NewCommand initializes the work command.
 func NewCommand(repository *work.Repository) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "work",

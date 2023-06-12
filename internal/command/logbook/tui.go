@@ -16,12 +16,14 @@ var baseStyle = lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderForeground(lipgloss.Color("240"))
 
+// Model is the TUI model for the logbook command.
 type Model struct {
 	repository *work.Repository
 
 	table table.Model
 }
 
+// NewModel initializes the TUI model for the logbook command.
 func NewModel(repository *work.Repository) *Model {
 	workTasks, err := repository.GetAllWorkTasks()
 	if err != nil {
@@ -109,14 +111,17 @@ func NewModel(repository *work.Repository) *Model {
 	}
 }
 
+// Init currently does nothing.
 func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+// Update currently does nothing.
+func (m Model) Update(tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Quit
 }
 
+// View holds the view logic for the main logbook Model.
 func (m Model) View() string {
 	return baseStyle.Render(m.table.View()) + "\n"
 }

@@ -26,6 +26,5 @@ func main() {
 
 	if err := base.NewCommand().ExecuteContext(ctx); err != nil {
 		log.Fatal("failed to execute command", "err", err)
-		os.Exit(1)
 	}
 }

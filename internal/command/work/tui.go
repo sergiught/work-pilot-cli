@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 
@@ -41,6 +41,7 @@ const (
 	progressView
 )
 
+// Model is the TUI model for the work command.
 type Model struct {
 	repository *work.Repository
 
@@ -57,6 +58,7 @@ type Model struct {
 	task          string
 }
 
+// NewModel initializes the TUI model for the work command.
 func NewModel(repository *work.Repository) *Model {
 	customTaskInput := NewTaskInput()
 	timeList := NewTimeList()
@@ -73,6 +75,7 @@ func NewModel(repository *work.Repository) *Model {
 	}
 }
 
+// NewTaskInput initializes the task input model.
 func NewTaskInput() textinput.Model {
 	taskInput := textinput.New()
 	taskInput.SetValue("Work")
@@ -84,6 +87,7 @@ func NewTaskInput() textinput.Model {
 	return taskInput
 }
 
+// NewTimeList initializes the time list model.
 func NewTimeList() list.Model {
 	items := []list.Item{
 		listItem{
@@ -119,22 +123,30 @@ type listItem struct {
 	value int
 }
 
-func (i listItem) FilterValue() string { return "" }
+// FilterValue is defined just so we can
+// adhere to the list.Item interface.
+func (i listItem) FilterValue() string {
+	return ""
+}
 
 type itemDelegate struct{}
 
+// Height returns the height of each item in the list.
 func (d itemDelegate) Height() int {
 	return 1
 }
 
+// Spacing returns the spacing of each item in the list.
 func (d itemDelegate) Spacing() int {
 	return 0
 }
 
+// Update doesn't do anything.
 func (d itemDelegate) Update(tea.Msg, *list.Model) tea.Cmd {
 	return nil
 }
 
+// Render renders the list items.
 func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
 	i, ok := item.(listItem)
 	if !ok {
@@ -153,6 +165,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 	fmt.Fprint(w, fn(str))
 }
 
+// NewTimeInput initializes the custom time input model.
 func NewTimeInput() textinput.Model {
 	timeInput := textinput.New()
 	timeInput.Placeholder = "0"
@@ -163,19 +176,18 @@ func NewTimeInput() textinput.Model {
 	return timeInput
 }
 
+// NewProgressIndicator initializes the progress indicator.
 func NewProgressIndicator() progress.Model {
 	progressIndicator := progress.New(progress.WithDefaultGradient())
 	return progressIndicator
 }
 
+// Init currently does nothing.
 func (m Model) Init() tea.Cmd {
-	if m.choice != 0 {
-		return tick()
-	}
-
 	return nil
 }
 
+// Update holds the update logic for the main work Model.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var commands []tea.Cmd
@@ -283,6 +295,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(commands...)
 }
 
+// View holds the view logic for the main work Model.
 func (m Model) View() string {
 	if m.isQuitting {
 		return infoTextStyle.Render("Not working? That’s cool. Enjoy a break!")

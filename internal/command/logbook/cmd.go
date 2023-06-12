@@ -7,6 +7,7 @@ import (
 	"github.com/sergiught/work-pilot-cli/internal/work"
 )
 
+// NewCommand initializes the logbook command.
 func NewCommand(repository *work.Repository) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "logbook",
