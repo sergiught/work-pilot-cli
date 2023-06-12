@@ -1,0 +1,37 @@
+run:
+  timeout: 1m
+  allow-parallel-runners: true
+
+linters:
+  disable-all: true
+  enable:
+    - unused
+    - gofmt
+    - staticcheck
+    - revive
+    - godot
+    - whitespace
+    - goimports
+    - gosimple
+    - errcheck
+    - unconvert
+    - gocritic
+    - gosec
+    - gocyclo
+
+linters-settings:
+  gofmt:
+    simplify: true
+  staticcheck:
+    checks: [ "all" ]
+  godot:
+    scope: all
+    capital: true
+    period: true
+  goimports:
+    local-prefixes: "github.com/sergiught/work-pilot-cli"
+
+issues:
+  exclude-use-default: false
+  exclude:
+    - "should have a package comment"
