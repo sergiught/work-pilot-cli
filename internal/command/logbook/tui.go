@@ -68,8 +68,8 @@ func NewModel(repository *work.Repository) *Model {
 	if workTaskColumnLength < len("Work Task") {
 		workTaskColumnLength = len("Work Task")
 	}
-	if durationColumnLength < len("Duration") {
-		durationColumnLength = len("Duration")
+	if durationColumnLength < len("Duration (min)") {
+		durationColumnLength = len("Duration (min)")
 	}
 	if dateColumnLength < len("Date") {
 		dateColumnLength = len("Date")
@@ -83,7 +83,7 @@ func NewModel(repository *work.Repository) *Model {
 
 	columns := []table.Column{
 		{Title: "Work Task", Width: workTaskColumnLength},
-		{Title: "Duration", Width: durationColumnLength},
+		{Title: "Duration (min)", Width: durationColumnLength},
 		{Title: "Date", Width: dateColumnLength},
 		{Title: "Started at", Width: startedAtColumnLength},
 		{Title: "Finished at", Width: finishedAtColumnLength},
