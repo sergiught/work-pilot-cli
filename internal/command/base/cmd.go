@@ -16,10 +16,13 @@ func NewCommand() *cobra.Command {
 	workRepository := &work.Repository{}
 
 	cmd := &cobra.Command{
-		Use:           "wp",
-		Short:         "",
-		Long:          "",
-		Example:       "",
+		Use:   "wp",
+		Short: "A time tracking CLI for Work Tasks",
+		Long: "Work Pilot allows to effortlessly keep tabs on the time spent on various work tasks without the " +
+			"overhead of complex GUI applications.",
+		Example: `  wp work
+  wp logbook
+`,
 		Version:       "dev",
 		SilenceErrors: true,
 		SilenceUsage:  true,

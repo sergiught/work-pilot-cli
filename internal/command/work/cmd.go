@@ -12,11 +12,12 @@ import (
 // NewCommand initializes the work command.
 func NewCommand(repository *work.Repository) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "work",
-		Args:    cobra.MaximumNArgs(1),
-		Short:   "",
-		Long:    "",
-		Example: "",
+		Use:   "work",
+		Args:  cobra.NoArgs,
+		Short: "Track time spent on a work task",
+		Long:  "This command initializes time tracking for the specified work task.",
+		Example: `  wp work
+  wp work --task "cooking"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			model := NewModel(repository)
 

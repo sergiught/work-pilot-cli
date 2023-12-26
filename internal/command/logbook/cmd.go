@@ -13,9 +13,10 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 		Use:     "logbook",
 		Aliases: []string{"log"},
 		Args:    cobra.MaximumNArgs(1),
-		Short:   "",
-		Long:    "",
-		Example: "",
+		Short:   "List all work tasks with their logged time",
+		Long:    "This command provides a detailed breakdown of time spent on the specified work tasks.",
+		Example: `  wp logbook
+  wp log`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			model := NewModel(repository)
 
