@@ -11,6 +11,8 @@ Work Pilot CLI is a tool designed for those who seek simplicity in time manageme
 and record the time spent on various work-related tasks, all without the need for complex GUIs. It is ideal for those
 who prefer a minimalist, no-frills approach to task tracking, offering a direct and fuss-free experience.
 
+![Work Pilot CLI Demo](assets/demo.gif)
+
 ## Installation
 
 `wp` is available as a downloadable packaged binary for Linux, macOS, and Windows from the [releases page](https://github.com/sergiught/work-pilot-cli/releases).
