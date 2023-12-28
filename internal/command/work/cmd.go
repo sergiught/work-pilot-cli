@@ -1,8 +1,6 @@
 package work
 
 import (
-	"time"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
@@ -19,8 +17,6 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 		Example: `  wp work
   wp work --task "cooking"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			model := NewModel(repository)
-
 			selectedTask, err := cmd.Flags().GetString("task")
 			if err != nil {
 				return err
@@ -31,12 +27,12 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 				return err
 			}
 
-			if selectedTask != "" {
-				model.task = selectedTask
-			}
+			model := NewModel(repository)
 
-			if selectedTimeDuration != 0 {
+			if selectedTask != "" && selectedTimeDuration != 0 {
+				model.task = selectedTask
 				model.timeRemaining = selectedTimeDuration
+				model.state = progressView
 			}
 
 			program := tea.NewProgram(model)
@@ -46,8 +42,9 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("task", "", "The name of the task you want to work on")
-	cmd.Flags().Duration("time", time.Minute*0, "The amount of time to perform the task for")
+	cmd.Flags().String("task", "", "The name of the task you want to work on.")
+	cmd.Flags().Duration("time", 0, "The amount of time to perform the task for. The value should include a number followed by a unit. Valid units are 's' for seconds, 'm' for minutes, and 'h' for hours. Examples: '3s' for 3 seconds, '5m' for 5 minutes, '1h' for 1 hour.")
+	cmd.MarkFlagsRequiredTogether("task", "time")
 
 	return cmd
 }
