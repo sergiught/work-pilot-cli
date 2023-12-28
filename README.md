@@ -3,7 +3,7 @@
 [![GoDoc](https://pkg.go.dev/badge/github.com/sergiught/work-pilot-cli.svg)](https://pkg.go.dev/github.com/sergiught/work-pilot-cli)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sergiught/work-pilot-cli?style=flat-square)](https://goreportcard.com/report/github.com/sergiught/work-pilot-cli)
 [![Release](https://img.shields.io/github/v/release/sergiught/work-pilot-cli?logo=github&include_prereleases&style=flat-square)](https://github.com/sergiught/work-pilot-cli/releases)
-[![License](https://img.shields.io/github/license/sergiught/work-pilot-cli.svg?logo=github&style=flat-square)](https://github.com/sergiught/work-pilot-cli/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/sergiught/work-pilot-cli.svg?logo=github&style=flat-square)](https://github.com/sergiught/work-pilot-cli/blob/main/LICENSE.md)
 
 ---
 
