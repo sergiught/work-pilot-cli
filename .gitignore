@@ -16,3 +16,5 @@ vendor/
 
 # Database
 work-pilot.db
+
+dist/
