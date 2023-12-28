@@ -20,7 +20,7 @@ who prefer a minimalist, no-frills approach to task tracking, offering a direct 
 Or, just install it with `go`:
 
 ```shell
-go install github.com/sergiught/work-pilot-cli@latest
+go install github.com/sergiught/work-pilot-cli/cmd/wp@latest
 ```
 
 ## Command Reference

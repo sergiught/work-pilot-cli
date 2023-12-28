@@ -3,7 +3,7 @@ version: 1
 
 builds:
   -
-    main: ./cmd/cli
+    main: ./cmd/wp
     binary: wp
     env:
       - CGO_ENABLED=0
