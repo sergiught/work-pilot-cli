@@ -36,8 +36,8 @@ func NewModel(repository *work.Repository) *Model {
 		taskName := task.Name
 		duration := task.Duration.String()
 		date := task.CreatedAt.Format("2006-01-02")
-		startedAt := task.CreatedAt.Format("15:04:05")
-		finishedAt := task.CreatedAt.Add(task.Duration * time.Second).Format("15:04:05")
+		startedAt := task.CreatedAt.Add(-task.Duration).Format("15:04:05")
+		finishedAt := task.CreatedAt.Format("15:04:05")
 
 		if workTaskColumnLength < len(task.Name) {
 			workTaskColumnLength = len(task.Name)
