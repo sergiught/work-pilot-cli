@@ -14,6 +14,10 @@ type selectedWorkTask struct {
 
 func selectTask(selectedTask string) tea.Cmd {
 	return func() tea.Msg {
+		if selectedTask == "" {
+			return nil
+		}
+
 		return selectedWorkTask{task: selectedTask}
 	}
 }
@@ -75,7 +79,7 @@ func finishWork(time time.Duration) tea.Cmd {
 
 		if err := beeep.Notify(
 			"Work Pilot: Work Finished!",
-			fmt.Sprintf("Congratulations! You've worked for %d minute(s).", time),
+			fmt.Sprintf("Congratulations! You've worked for %.f minute(s).", time.Minutes()),
 			"",
 		); err != nil {
 			finalError = fmt.Errorf("%w: failed to notify with a notification that work finished: %w", finalError, err)

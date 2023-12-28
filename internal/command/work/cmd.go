@@ -31,6 +31,7 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 
 			if selectedTask != "" && selectedTimeDuration != 0 {
 				model.task = selectedTask
+				model.choice = selectedTimeDuration
 				model.timeRemaining = selectedTimeDuration
 				model.state = progressView
 			}

@@ -17,10 +17,11 @@ import (
 )
 
 const (
-	progressMaxWidth = 80
-	progressPadding  = 2
-	listWidth        = 20
-	listHeight       = 14
+	progressMaxWidth    = 80
+	progressPadding     = 2
+	listWidth           = 20
+	listHeight          = 14
+	customDurationLabel = "Custom Duration"
 )
 
 var (
@@ -79,7 +80,6 @@ func NewModel(repository *work.Repository) *Model {
 // NewTaskInput initializes the task input model.
 func NewTaskInput() textinput.Model {
 	taskInput := textinput.New()
-	taskInput.SetValue("Work")
 	taskInput.Placeholder = "Work"
 	taskInput.Focus()
 	taskInput.CharLimit = 256
@@ -92,19 +92,19 @@ func NewTaskInput() textinput.Model {
 func NewTimeList() list.Model {
 	items := []list.Item{
 		listItem{
-			label: "20 seconds",
-			value: 20,
+			label: "20 minutes",
+			value: time.Minute * 20,
 		},
 		listItem{
-			label: "40 seconds",
-			value: 40,
+			label: "40 minutes",
+			value: time.Minute * 40,
 		},
 		listItem{
-			label: "60 seconds",
-			value: 60,
+			label: "60 minutes",
+			value: time.Minute * 60,
 		},
 		listItem{
-			label: "Custom Value",
+			label: customDurationLabel,
 		},
 	}
 
@@ -183,8 +183,12 @@ func NewProgressIndicator() progress.Model {
 	return progressIndicator
 }
 
-// Init currently does nothing.
+// Init will immediately start the timer if task and time flags were passed.
 func (m Model) Init() tea.Cmd {
+	if m.task != "" && m.choice != 0 {
+		return tick()
+	}
+
 	return nil
 }
 
@@ -205,7 +209,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case selectedWorkTask:
 		m.task = msg.task
-		m.taskInput.Reset()
+		m.timeInput.Reset()
 
 		m.state = timeSelection
 		m.timeList, cmd = m.timeList.Update(msg)
@@ -223,6 +227,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, tick()
 	case selectedCustomTime:
+		if msg.error != nil {
+			log.Error("failed to select custom time: %w", msg.error)
+			return m, tea.Quit
+		}
+
 		m.choice = msg.time
 		m.timeRemaining = msg.time
 		m.state = progressView
@@ -255,7 +264,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, selectTask(m.taskInput.Value())
 			case timeSelection:
 				selectedItem := m.timeList.SelectedItem().(listItem)
-				if selectedItem.label == "Custom Value" {
+				if selectedItem.label == customDurationLabel {
 					return m, selectTimeFromInput(selectedItem.value)
 				}
 
@@ -271,9 +280,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, finishWork(m.choice)
 		}
 
-		m.timeRemaining--
+		m.timeRemaining -= time.Second
 
-		increment := 1.0 / float64(m.choice)
+		increment := 1.0 / m.choice.Seconds()
+
 		cmd = m.progress.IncrPercent(increment)
 
 		return m, tea.Batch(tick(), cmd)
@@ -314,7 +324,7 @@ func (m Model) View() string {
 
 	case customTimeSelection:
 		return fmt.Sprintf(
-			"\n    How many minutes do you want to work for?\n\n    %s\n\n    %s",
+			"\n    How much time do you want to work for? Examples: '3s' for 3 seconds, '5m' for 5 minutes, '1h' for 1 hour.\n\n    %s\n\n    %s",
 			m.timeInput.View(),
 			"(q to quit)",
 		)
@@ -322,9 +332,9 @@ func (m Model) View() string {
 		pad := strings.Repeat(" ", progressPadding)
 		return infoTextStyle.Render(
 			fmt.Sprintf(
-				"Running timer for %d seconds. Have fun! %d seconds remaining.",
-				m.choice,
-				m.timeRemaining,
+				"Running timer for %.0f seconds. Have fun! %.0f seconds remaining.",
+				m.choice.Seconds(),
+				m.timeRemaining.Seconds(),
 			),
 		) + "\n" + pad + m.progress.View() + "\n\n" + pad + progressHelpStyle("Press q key to quit")
 	default:
