@@ -23,13 +23,13 @@ func Connect() (*gorm.DB, error) {
 
 	dir := filepath.Dir(databasePath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0750); err != nil {
 			return nil, fmt.Errorf("failed to create database dir: %w", err)
 		}
 	}
 
 	if _, err := os.Stat(databasePath); os.IsNotExist(err) {
-		file, err := os.Create(databasePath)
+		file, err := os.Create(filepath.Clean(databasePath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create database file: %w", err)
 		}
