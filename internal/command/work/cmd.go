@@ -1,7 +1,7 @@
 package work
 
 import (
-	"strconv"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -21,21 +21,22 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			model := NewModel(repository)
 
-			task, err := cmd.Flags().GetString("task")
+			selectedTask, err := cmd.Flags().GetString("task")
 			if err != nil {
 				return err
 			}
 
-			model.task = task
+			selectedTimeDuration, err := cmd.Flags().GetDuration("time")
+			if err != nil {
+				return err
+			}
 
-			if len(args) > 0 {
-				choice, err := strconv.Atoi(args[0])
-				if err != nil {
-					return err
-				}
+			if selectedTask != "" {
+				model.task = selectedTask
+			}
 
-				model.choice = choice
-				model.timeRemaining = choice
+			if selectedTimeDuration != 0 {
+				model.timeRemaining = selectedTimeDuration
 			}
 
 			program := tea.NewProgram(model)
@@ -46,6 +47,7 @@ func NewCommand(repository *work.Repository) *cobra.Command {
 	}
 
 	cmd.Flags().String("task", "", "The name of the task you want to work on")
+	cmd.Flags().Duration("time", time.Minute*0, "The amount of time to perform the task for")
 
 	return cmd
 }

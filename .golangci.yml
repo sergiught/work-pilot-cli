@@ -1,6 +1,7 @@
 run:
   timeout: 1m
   allow-parallel-runners: true
+  modules-download-mode: readonly
 
 linters:
   disable-all: true

@@ -1,6 +1,8 @@
 package work
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -14,7 +16,7 @@ type Repository struct {
 type Task struct {
 	gorm.Model
 	Name     string
-	Duration int
+	Duration time.Duration
 }
 
 // TableName returns the name of database

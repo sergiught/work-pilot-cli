@@ -1,7 +1,6 @@
 package logbook
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -35,16 +34,16 @@ func NewModel(repository *work.Repository) *Model {
 	var workTaskColumnLength, durationColumnLength, dateColumnLength, startedAtColumnLength, finishedAtColumnLength int
 	for _, task := range workTasks {
 		taskName := task.Name
-		duration := strconv.Itoa(task.Duration)
+		duration := task.Duration.String()
 		date := task.CreatedAt.Format("2006-01-02")
 		startedAt := task.CreatedAt.Format("15:04:05")
-		finishedAt := task.CreatedAt.Add(time.Duration(task.Duration) * time.Second).Format("15:04:05")
+		finishedAt := task.CreatedAt.Add(task.Duration * time.Second).Format("15:04:05")
 
 		if workTaskColumnLength < len(task.Name) {
 			workTaskColumnLength = len(task.Name)
 		}
-		if durationColumnLength < len(strconv.Itoa(task.Duration)) {
-			durationColumnLength = len(strconv.Itoa(task.Duration))
+		if durationColumnLength < len(duration) {
+			durationColumnLength = len(duration)
 		}
 		if dateColumnLength < len(task.CreatedAt.Format("2006-01-02")) {
 			dateColumnLength = len(task.CreatedAt.Format("2006-01-02"))
@@ -52,8 +51,8 @@ func NewModel(repository *work.Repository) *Model {
 		if startedAtColumnLength < len(task.CreatedAt.Format("15:04:05")) {
 			startedAtColumnLength = len(task.CreatedAt.Format("15:04:05"))
 		}
-		if finishedAtColumnLength < len(task.CreatedAt.Add(time.Duration(task.Duration)*time.Second).Format("15:04:05")) {
-			finishedAtColumnLength = len(task.CreatedAt.Add(time.Duration(task.Duration) * time.Second).Format("15:04:05"))
+		if finishedAtColumnLength < len(task.CreatedAt.Add(task.Duration*time.Second).Format("15:04:05")) {
+			finishedAtColumnLength = len(task.CreatedAt.Add(task.Duration * time.Second).Format("15:04:05"))
 		}
 
 		rows = append(rows, table.Row{

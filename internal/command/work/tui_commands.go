@@ -2,7 +2,6 @@ package work
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -20,33 +19,33 @@ func selectTask(selectedTask string) tea.Cmd {
 }
 
 type selectedWorkTimeFromList struct {
-	time int
+	time time.Duration
 }
 
-func selectTimeFromList(selectedTime int) tea.Cmd {
+func selectTimeFromList(selectedTime time.Duration) tea.Cmd {
 	return func() tea.Msg {
 		return selectedWorkTimeFromList{time: selectedTime}
 	}
 }
 
 type selectedWorkTimeFromInput struct {
-	time int
+	time time.Duration
 }
 
-func selectTimeFromInput(selectedTime int) tea.Cmd {
+func selectTimeFromInput(selectedTime time.Duration) tea.Cmd {
 	return func() tea.Msg {
 		return selectedWorkTimeFromInput{time: selectedTime}
 	}
 }
 
 type selectedCustomTime struct {
-	time  int
+	time  time.Duration
 	error error
 }
 
 func selectCustomTime(selectedTime string) tea.Cmd {
 	return func() tea.Msg {
-		value, err := strconv.Atoi(selectedTime)
+		value, err := time.ParseDuration(selectedTime)
 		if err != nil {
 			return selectedCustomTime{error: err}
 		}
@@ -67,7 +66,7 @@ type workFinished struct {
 	error error
 }
 
-func finishWork(time int) tea.Cmd {
+func finishWork(time time.Duration) tea.Cmd {
 	return func() tea.Msg {
 		var finalError error
 		if err := beeep.Beep(44000, 10000); err != nil {
@@ -76,7 +75,7 @@ func finishWork(time int) tea.Cmd {
 
 		if err := beeep.Notify(
 			"Work Pilot: Work Finished!",
-			fmt.Sprintf("Congratulations! You've worked for %d second(s).", time),
+			fmt.Sprintf("Congratulations! You've worked for %d minute(s).", time),
 			"",
 		); err != nil {
 			finalError = fmt.Errorf("%w: failed to notify with a notification that work finished: %w", finalError, err)

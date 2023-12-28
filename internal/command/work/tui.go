@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
@@ -53,8 +54,8 @@ type Model struct {
 	state      state
 	isQuitting bool
 
-	choice        int
-	timeRemaining int
+	choice        time.Duration
+	timeRemaining time.Duration
 	task          string
 }
 
@@ -120,7 +121,7 @@ func NewTimeList() list.Model {
 
 type listItem struct {
 	label string
-	value int
+	value time.Duration
 }
 
 // FilterValue is defined just so we can
